@@ -20,11 +20,9 @@ class amazon_sns_helper {
 	 * @return SimpleXMLElement
 	 */
 	public static function request ($params) {
-		date_default_timezone_set('UTC');
-		
 		// Add in the extra parameters which we know    
 		$params['AWSAccessKeyId'] = AWS_ACCESS_KEY;
-		$params['Timestamp'] = date('c');
+		$params['Timestamp'] = gmdate("Y-m-d\TH:i:s\Z");
 		$params['SignatureMethod'] = 'HmacSHA256';
 		$params['SignatureVersion'] = 2;
 		
@@ -41,12 +39,7 @@ class amazon_sns_helper {
 		$string .= implode('&', $encoded);
 		
 		$params['Signature'] = base64_encode(hash_hmac('sha256', $string, AWS_PRIVATE_KEY, true));
-		
-		// Run around again and reconde things as we now have the signature...lazy?
-		$encoded = array();
-		foreach($params as $key=>$param) {
-			$encoded[] = rawurlencode($key) . '=' . rawurlencode($param);
-		}
+		$encoded[] = 'Signature=' . rawurlencode( $params['Signature'] );
 		$url = 'https://' . self::HOST . '/?' . implode('&', $encoded);
 		
 		// Init curl
